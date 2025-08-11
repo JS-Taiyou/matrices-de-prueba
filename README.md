@@ -1,15 +1,14 @@
-# Elysia with Bun runtime
+# Genera matrices de prueba en JSON
 
-## Getting Started
-To get started with this template, simply paste this command into your terminal:
+## Para comenzar
+1a. Descarga el código
+1b. O bien, clónalo usando
 ```bash
-bun create elysia ./elysia-example
+git clone https://github.com/JS-Taiyou/matrices-de-prueba.git
+```
+Luego, ya teniendo instalado y disponible en el PATH, puedes levantar el servidor de desarrollo usando en tu terminal:
+```bash
+bun dev
 ```
 
-## Development
-To start the development server run:
-```bash
-bun run dev
-```
-
-Open http://localhost:3000/ with your browser to see the result.
+Puedes acceder al proyecto en tu navegador yendo a http://localhost:3000/
