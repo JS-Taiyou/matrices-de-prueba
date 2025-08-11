@@ -8,7 +8,7 @@
 ```bash
 git clone https://github.com/JS-Taiyou/matrices-de-prueba.git
 ```
-Luego, ya teniendo instalado y disponible en el PATH, puedes levantar el servidor de desarrollo usando en tu terminal:
+Luego, ya teniendo instalado el runtime de bun y disponible en el PATH, puedes levantar el servidor de desarrollo usando en tu terminal:
 ```bash
 bun dev
 ```
