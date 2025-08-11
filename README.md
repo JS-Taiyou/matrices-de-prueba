@@ -2,6 +2,8 @@
 
 ## Para comenzar
 1a. Descarga el código
+
+
 1b. O bien, clónalo usando
 ```bash
 git clone https://github.com/JS-Taiyou/matrices-de-prueba.git
