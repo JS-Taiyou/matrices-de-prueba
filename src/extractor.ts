@@ -5,8 +5,6 @@ import fs from 'node:fs'
 
 const extractorHtml = fs.readFileSync('./src/extractor-content.html', 'utf8');
 
-
-
 export const extractor = new Elysia()
 	.use(html()) 
 	.get('/extractor-content', () => new Response(extractorHtml, {
