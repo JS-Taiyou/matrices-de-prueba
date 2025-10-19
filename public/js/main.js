@@ -122,6 +122,42 @@ function extractorApp() {
 
             block.caseText = '';
             block.timestampText = '';
+        },
+
+        hasPendingCases() {
+            return this.matrices.some(matrix => 
+                matrix.blocks.some(block => 
+                    block.caseText.trim() || block.timestampText.trim()
+                )
+            );
+        },
+
+        addAllPendingCases() {
+            this.matrices.forEach(matrix => {
+                matrix.blocks.forEach(block => {
+                    if (block.caseText.trim() || block.timestampText.trim()) {
+                        this.addCases(matrix.id, block.id);
+                    }
+                });
+            });
+        },
+
+        checkPendingCasesAndSubmit(event) {
+            if (this.hasPendingCases()) {
+                event.preventDefault();
+                
+                if (confirm('¿Deseas incluir los casos pendientes de agregar?')) {
+                    this.addAllPendingCases();
+                    // Submit the form after adding pending cases
+                    setTimeout(() => {
+                        event.target.form.submit();
+                    }, 100);
+                } else {
+                    // Submit the form without adding pending cases
+                    event.target.form.submit();
+                }
+            }
+            // If no pending cases, let form submit normally
         }
     };
 }
