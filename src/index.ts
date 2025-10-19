@@ -8,12 +8,8 @@ import { extractor } from './extractor'
 
 if(process.env && process.env.npm_lifecycle_event === "dev") {
 
-  const watcher = watch('src/origin.css', (event, filename) => {
-      console.log('Regenerating CSS...')
-
-      const tw = spawnSync('bun', [ 'tailwindcss', '-i', 'src/origin.css', '-o', 'public/css/style.css' ], {
-          stdio: 'inherit'
-      });
+  const tw = spawnSync('bun', [ 'tailwindcss', '-i', 'src/origin.css', '-o', 'public/css/style.css' ], {
+      stdio: 'inherit'
   });
 }
 const app = new Elysia(
