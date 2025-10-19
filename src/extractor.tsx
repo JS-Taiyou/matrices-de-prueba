@@ -6,12 +6,12 @@ import fs from 'node:fs'
 
 
 export const extractor = new Elysia()
-	.use(html()) 
+	.use(html())
 	.get('/', ({ html }) => html(
 		<Layout>
-             <div class="flex flex-col gap-4 w-[80%]">
+             <div class="flex flex-col gap-4 w-full">
                 <div class="bg-base-100 border-base-300 border">
-                    <div class="font-semibold"> 
+                    <div class="font-semibold">
                         Extraer mensajes
                     </div>
                 </div>
@@ -23,15 +23,15 @@ export const extractor = new Elysia()
                     </label>
                     <div class="flex flex-col gap-2">
                         <div class="flex gap-2">
-                            <input type="text" class="input flex-1" pattern="[A-ZÑ&]{3,4}\d{6}[A-V1-9][0-9A-Z]" 
+                            <input type="text" class="input flex-1" pattern="[A-ZÑ&]{3,4}\d{6}[A-V1-9][0-9A-Z]"
                                 placeholder="Nombre de matriz" id="matrix-name-0" />
                             <button type="button" class="btn btn-circle btn-sm" id="add-matrix-button">+</button>
                         </div>
                     </div>
 
-                    
+
                     <fieldset id="matrix-container" class="fieldset bg-base-200">
-                        
+
                     </fieldset>
                     <div class=" bottom-0 mt-auto pt-2">
                         <button class="btn btn-neutral w-full" type="submit">Procesar</button>

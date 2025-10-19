@@ -28,7 +28,7 @@ function addCase (blockId, caseTextInput, timestampInput) {
     }
     caseTextInput.value = '';
     timestampInput.value = '';
-    
+
 }
 
 function spawnCase(blockId, caseText, timestamp) {
@@ -62,7 +62,7 @@ function addMatrixBlock(matrixId, blockNameInput){
     if (!blockNameInput.value.trim().length) {
         return;
     }
-    
+
     const randomAlphanumeric = Math.random().toString(36).substring(2, 6);
     const legend = document.createElement('legend');
     legend.classList.add('fieldset-legend', 'block');
@@ -75,7 +75,7 @@ function addMatrixBlock(matrixId, blockNameInput){
     hiddenInput.name = `block-name#${matrixId}#${randomAlphanumeric}`;
     hiddenInput.value = btoa(blockNameInput.value);
     const div = document.createElement('div');
-    div.classList.add('flex', 'flex-col', 'gap-2', 'w-5/6');
+    div.classList.add('flex', 'flex-col', 'gap-2', 'w-full');
     const secondDiv = document.createElement('div');
     secondDiv.classList.add('flex', 'gap-2');
     const input = document.createElement('textarea');
@@ -87,14 +87,14 @@ function addMatrixBlock(matrixId, blockNameInput){
     timestampInput.classList.add('input', 'flex-1', 'h-[150px]');
     timestampInput.placeholder = 'Timestamps de los casos (opcional)';
     timestampInput.id = `add-case-timestamp-${randomAlphanumeric}`;
-    
+
 
     const newBlockAddCaseButton = document.createElement('button');
     newBlockAddCaseButton.type = 'button';
     newBlockAddCaseButton.classList.add('btn', 'btn-circle', 'btn-sm');
     newBlockAddCaseButton.innerHTML = '+';
     newBlockAddCaseButton.id = `add-case-button-${randomAlphanumeric}`;
-    
+
     // Find the matrix container and append the block
     const matrixElement = document.querySelector(`[data-matrix-id="${matrixId}"]`);
     if (matrixElement) {
@@ -125,7 +125,7 @@ addMatrixButton.addEventListener('click', function() {
     if (!matrixNameInput.value.trim().length) {
         return;
     }
-    
+
     const randomAlphanumeric = Math.random().toString(36).substring(2, 6);
     const legend = document.createElement('legend');
     legend.classList.add('fieldset-legend', 'block');
@@ -137,16 +137,16 @@ addMatrixButton.addEventListener('click', function() {
     const div = document.createElement('div');
     div.classList.add('flex', 'flex-col', 'gap-2', 'pl-[16px]');
     div.setAttribute('data-matrix-id', randomAlphanumeric);
-    
+
     // Create a button to add blocks to this matrix
     const addBlockButton = document.createElement('button');
     addBlockButton.type = 'button';
     addBlockButton.classList.add('btn', 'btn-primary', 'mb-4');
     addBlockButton.innerHTML = 'Nuevo bloque';
     addBlockButton.id = `add-block-button-${randomAlphanumeric}`;
-    
+
     matrixContainer.append(legend, hiddenInput, div, addBlockButton);
-        
+
     // Add event listener for the add block button
     addBlockButton.addEventListener('click', function() {
         const blockName = prompt('Captura el nombre del bloque:');
