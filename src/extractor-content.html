@@ -1,0 +1,67 @@
+             <div class="flex flex-col gap-4 w-full" x-data="extractorApp()">
+                <div class="bg-base-100 border-base-300 border">
+                    <div class="font-semibold">
+                        Extraer mensajes
+                    </div>
+                </div>
+                <form class="text-sm flex flex-row gap-4 w-full" method="post" action="/procesar-mensajeria" enctype="multipart/form-data" target="_blank">
+                <fieldset class="fieldset bg-base-200 border border-base-300 p-4 rounded-box flex-5">
+                    <legend class="fieldset-legend">Información a extraer</legend>
+                    <label class="fieldset-label">
+                        Matrices
+                    </label>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex gap-2">
+                            <input type="text" class="input flex-1" pattern="[A-ZÑ&]{3,4}\d{6}[A-V1-9][0-9A-Z]"
+                                placeholder="Nombre de matriz" x-model="newMatrixName" @keydown.enter.prevent="addMatrix()" />
+                            <button type="button" class="btn btn-circle btn-sm" @click="addMatrix()">+</button>
+                        </div>
+                    </div>
+
+
+                    <fieldset id="matrix-container" class="fieldset bg-base-200">
+                        <template x-for="matrix in matrices" :key="matrix.id">
+                            <div>
+                                <legend class="fieldset-legend block" x-html="matrix.name + '<div class=&quot;badge badge-success ml-2&quot;>Matriz</div>'"></legend>
+                                <input type="hidden" :name="'matrix-name#' + matrix.id" :value="matrix.encodedName" />
+                                <div class="flex flex-col gap-2 pl-[16px]" :data-matrix-id="matrix.id">
+                                    <template x-for="block in matrix.blocks" :key="block.id">
+                                        <div>
+                                            <legend class="fieldset-legend block" x-html="block.name + '<div class=&quot;badge badge-info ml-2&quot;>Bloque</div>'"></legend>
+                                            <input type="hidden" :name="'block-name#' + matrix.id + '#' + block.id" :value="block.encodedName" />
+                                            <label class="fieldset-label">Casos</label>
+                                            <div class="flex flex-col gap-2 w-full">
+                                                <div class="flex gap-2">
+                                                    <textarea class="input flex-3 h-[150px]" rows="5"
+                                                        placeholder="Caso o casos de prueba"
+                                                        x-model="block.caseText"></textarea>
+                                                    <textarea class="input flex-1 h-[150px]" rows="5"
+                                                        placeholder="Timestamps de los casos (opcional)"
+                                                        x-model="block.timestampText"></textarea>
+                                                    <button type="button" class="btn btn-circle btn-sm" @click="addCases(matrix.id, block.id)">+</button>
+                                                </div>
+                                                <template x-for="caseItem in block.cases" :key="caseItem.id">
+                                                    <div>
+                                                        <legend class="fieldset-legend ml-4 block" x-html="caseItem.text + '<div class=&quot;badge badge-soft badge-info ml-2&quot;>Caso #' + caseItem.number + '</div>'"></legend>
+                                                        <label class="fieldset-label w-full ml-4">Timestamp</label>
+                                                        <input type="text" class="input ml-4" placeholder="Timestamp"
+                                                            :name="'case-date#' + block.id + '#case-' + caseItem.id"
+                                                            :value="caseItem.timestamp" />
+                                                        <input type="hidden" :name="'case-text#' + block.id + '#case-' + caseItem.id" :value="caseItem.encodedText" />
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <button type="button" class="btn btn-primary mb-4" @click="addBlock(matrix.id)">Nuevo bloque</button>
+                            </div>
+                        </template>
+                    </fieldset>
+                    <div class=" bottom-0 mt-auto pt-2">
+                        <button class="btn btn-neutral w-full" type="submit">Procesar</button>
+                    </div>
+                </fieldset>
+
+                </form>
+            </div>
