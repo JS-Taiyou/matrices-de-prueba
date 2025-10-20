@@ -27,6 +27,7 @@ function extractorApp() {
 
             this.matrices.push(matrix);
             this.newMatrixName = '';
+            console.log('Matrix added:', matrix);
         },
 
         addBlock(matrixId) {
@@ -42,10 +43,13 @@ function extractorApp() {
                 encodedName: this.encodeText(blockName),
                 caseText: '',
                 timestampText: '',
+                caseLines: 0,
+                timestampLines: 0,
                 cases: []
             };
 
             matrix.blocks.push(block);
+            console.log('Block added:', block);
         },
 
         editMatrix(matrixId) {
@@ -158,6 +162,11 @@ function extractorApp() {
                 }
             }
             // If no pending cases, let form submit normally
+        },
+
+        countValidLines(text) {
+            const lines = text.split('\n').filter(line => line.trim());
+            return lines.length;
         }
     };
 }

@@ -32,13 +32,28 @@
                                             <label class="fieldset-label">Casos</label>
                                             <div class="flex flex-col gap-2 w-full">
                                                 <div class="flex gap-2">
-                                                    <textarea class="input flex-3 h-[150px]" rows="5"
-                                                        placeholder="Caso o casos de prueba"
-                                                        x-model="block.caseText"></textarea>
-                                                    <textarea class="input flex-1 h-[150px]" rows="5"
-                                                        placeholder="Timestamps de los casos (opcional)"
-                                                        x-model="block.timestampText"></textarea>
+                                                    <div class="flex-3">
+                                                        <textarea class="input h-[150px] w-full" rows="5"
+                                                            placeholder="Caso o casos de prueba"
+                                                            x-model="block.caseText"
+                                                            @keyup="block.caseLines = countValidLines($event.target.value)"></textarea>
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <textarea class="input h-[150px] w-full" rows="5"
+                                                            placeholder="Timestamps de los casos (opcional)"
+                                                            x-model="block.timestampText"
+                                                            @keyup="block.timestampLines = countValidLines($event.target.value)"></textarea>
+                                                    </div>
                                                     <button type="button" class="btn btn-circle btn-sm" @click="addCases(matrix.id, block.id)">+</button>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <div class="flex-3 text-xs mt-1">
+                                                        <div class="badge badge-info badge-outline" x-text="block.caseLines + ' líneas'"></div>
+                                                    </div>
+                                                    <div class="flex-1 text-xs mt-1">
+                                                        <div class="badge badge-warning badge-outline" x-text="block.timestampLines + ' líneas'"></div>
+                                                    </div>
+                                                    <div class="w-[40px]"></div>
                                                 </div>
                                                 <template x-for="caseItem in block.cases" :key="caseItem.id">
                                                     <div>
