@@ -10,7 +10,10 @@ export const Layout = ({ children, loadedPage = 'extractor' }: { children: any, 
   Html.createElement('body', {},
     Html.createElement('div', { class: 'navbar bg-primary text-primary-content' },
       Html.createElement('div', { class: 'flex-1' },
-        Html.createElement('button', { class: 'btn btn-ghost text-xl' }, 'Mensajeria')
+        Html.createElement('a', { href: '/', class: 'btn btn-ghost text-xl' }, 'Mensajeria')
+      ),
+      Html.createElement('div', {},
+        Html.createElement('a', { href: '/queries', class: 'btn btn-ghost' }, 'Queries')
       )
     ),
     Html.createElement('div', { class: 'flex grow justify-center p-4', id: 'main-content', 'x-data': "{ content: '' }", 'x-init': "content = await (await fetch('/extractor-content')).text()", 'x-html': 'content' }),

@@ -6,7 +6,7 @@ import fs from 'node:fs'
 const extractorHtml = fs.readFileSync('./src/extractor-content.html', 'utf8');
 
 export const extractor = new Elysia()
-	.use(html()) 
+	.use(html())
 	.get('/extractor-content', () => new Response(extractorHtml, {
 		headers: {
 			'Content-Type': 'text/html'
@@ -82,3 +82,54 @@ export const extractor = new Elysia()
 			}
 		});
 	})
+	.get('/queries', ({ html }) => html(
+		Html.createElement('html', { 'data-theme': 'abyss' },
+			Html.createElement('head', {},
+				Html.createElement('script', { defer: true, src: 'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js' }),
+				Html.createElement('style', {}, '@import "assets/css/style.css";')
+			),
+			Html.createElement('body', {},
+				Html.createElement('div', { class: 'navbar bg-primary text-primary-content' },
+					Html.createElement('div', { class: 'flex-1' },
+						Html.createElement('a', { href: '/', class: 'btn btn-ghost text-xl' }, 'Mensajeria')
+					),
+					Html.createElement('div', {},
+						Html.createElement('a', { href: '/queries', class: 'btn btn-ghost' }, 'Queries')
+					)
+				),
+				Html.createElement('div', { 
+					class: 'flex flex-row h-screen', 
+					'x-data': '{ queryInput: "", get processedCode() { return processQuery(this.queryInput); } }'
+				},
+					Html.createElement('div', { class: 'w-1/2 p-4' },
+						Html.createElement('div', { class: 'form-control h-full' },
+							Html.createElement('label', { class: 'label' },
+								Html.createElement('span', { class: 'label-text text-lg font-semibold' }, 'Input Query')
+							),
+							Html.createElement('textarea', {
+								class: 'textarea textarea-bordered h-5/6 w-full',
+								placeholder: 'Enter your query here...',
+								'x-model': 'queryInput'
+							})
+						)
+					),
+					Html.createElement('div', { class: 'w-1/2 p-4' },
+						Html.createElement('div', { class: 'form-control h-full' },
+							Html.createElement('label', { class: 'label' },
+								Html.createElement('span', { class: 'label-text text-lg font-semibold' }, 'Generated Code')
+							),
+							Html.createElement('div', { class: 'mockup-code h-5/6 w-full overflow-auto' },
+								Html.createElement('pre', { class: 'text-warning-content whitespace-pre-wrap' },
+									Html.createElement('code', {
+										class: 'pl-4 block',
+										'x-text': 'processedCode'
+									})
+								)
+							)
+						)
+					)
+				),
+				Html.createElement('script', { src: 'assets/js/queries.js' })
+			)
+		)
+	))
