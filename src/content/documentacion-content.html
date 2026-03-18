@@ -1,0 +1,20 @@
+<div class="flex flex-row w-full" x-data="documentacionApp()" x-init="init()">
+    <div class="w-1/2 p-4">
+        <template x-for="field in rootFields" :key="field.id">
+            <div x-html="renderField(field)"></div>
+        </template>
+    </div>
+
+    <div class="w-1/2 p-4 sticky top-4 self-start h-screen">
+        <div class="form-control h-full">
+            <label class="label">
+                <span class="label-text text-lg font-semibold">Generated Code</span>
+            </label>
+            <div class="mockup-code h-5/6 w-full overflow-auto">
+                <pre class="text-accent-content whitespace-pre-wrap">
+                    <code class="pl-4 block" x-text="processedCode"></code>
+                </pre>
+            </div>
+        </div>
+    </div>
+</div>

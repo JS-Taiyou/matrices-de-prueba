@@ -1,0 +1,26 @@
+<div class="flex flex-row h-screen w-full" x-data='{ queryInput: "", get processedCode() { return processQuery(this.queryInput); } }'>
+    <div class="w-1/2 p-4">
+        <div class="form-control h-full">
+            <label class="label">
+                <span class="label-text text-lg font-semibold">Input Query</span>
+            </label>
+            <textarea
+                class="textarea textarea-bordered h-5/6 w-full"
+                placeholder="Enter your query here..."
+                x-model="queryInput"
+            ></textarea>
+        </div>
+    </div>
+    <div class="w-1/2 p-4">
+        <div class="form-control h-full">
+            <label class="label">
+                <span class="label-text text-lg font-semibold">Generated Code</span>
+            </label>
+            <div class="mockup-code h-5/6 w-full overflow-auto">
+                <pre class="text-warning-content whitespace-pre-wrap">
+                    <code class="pl-4 block" x-text="processedCode"></code>
+                </pre>
+            </div>
+        </div>
+    </div>
+</div>
