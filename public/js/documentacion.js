@@ -1,14 +1,14 @@
-// Documentation processing logic - Dynamic version
+// Documentation processing logic - Multi-group version
 
-function processDocumentacionDynamic(fields, fieldValues) {
+function processDocumentacionDynamic(fields, groupValues) {
   const getFieldVal = (id) => {
     const field = fields.find(f => f.id === id);
     if (!field) return '';
 
     // For switch types, compute value from toggle state + options
     if (field.type === 'switch') {
-      const toggleState = fieldValues[`switch_field_${id}`];
-      const isVisible = field.is_optional ? fieldValues[`field_${id}`] : true;
+      const toggleState = groupValues[`switch_field_${id}`];
+      const isVisible = field.is_optional ? groupValues[`field_${id}`] : true;
 
       if (!isVisible) return '';
 
@@ -20,12 +20,12 @@ function processDocumentacionDynamic(fields, fieldValues) {
 
     // For optional selects, check visibility and use _select suffix
     if (field.type === 'select' && field.is_optional) {
-      const isVisible = fieldValues[`field_${id}`];
+      const isVisible = groupValues[`field_${id}`];
       if (!isVisible) return '';
-      return fieldValues[`field_${id}_select`] || '';
+      return groupValues[`field_${id}_select`] || '';
     }
 
-    return fieldValues[`field_${id}`] || '';
+    return groupValues[`field_${id}`] || '';
   };
 
   const getField = (id) => fields.find(f => f.id === id);
@@ -53,8 +53,8 @@ function processDocumentacionDynamic(fields, fieldValues) {
 
   const firstOptSelect = getField(10);
   if (firstOptSelect && firstOptSelect.is_optional) {
-    const isVisible = fieldValues['field_10'];
-    const selectedValue = fieldValues['field_10_select'] || '';
+    const isVisible = groupValues['field_10'];
+    const selectedValue = groupValues['field_10_select'] || '';
     if (isVisible) {
       result += `${firstOptSelect.title} = ${selectedValue}\n`;
     }
@@ -73,7 +73,6 @@ function processDocumentacionDynamic(fields, fieldValues) {
 
     if (field.type === 'checkbox') {
       const val = getFieldVal(id);
-      //console.log(`Field ${id} (${field.title}): type=${field.type}, value=${val}, output_label=${field.output_label}`);
       if (val) {
         result += `  ${field.title} = ${field.output_label}\n`;
       }
@@ -91,7 +90,7 @@ function processDocumentacionDynamic(fields, fieldValues) {
     } else if (field.type === 'switch') {
       const isVisible = field.is_optional ? getFieldVal(id) : true;
       if (isVisible && field.options.length >= 2) {
-        const isOn = fieldValues[`switch_field_${id}`];
+        const isOn = groupValues[`switch_field_${id}`];
         const optionValue = isOn ? field.options[1].value : field.options[0].value;
         result += `  ${field.title} = ${optionValue}\n`;
       }
@@ -107,120 +106,239 @@ function processDocumentacionDynamic(fields, fieldValues) {
   return result || "// Esperando transacciones...";
 }
 
-// Alpine.js component - properties initialized upfront with defaults
+// Client-side field renderer - generates HTML with Alpine bindings for a specific group
+function renderFieldClient(field, allFields, groupIndex) {
+  const varName = `field_${field.id}`;
+  const modelPrefix = `inputGroups[${groupIndex}]`;
+  const modelVar = `${modelPrefix}.${varName}`;
+  const switchVar = `${modelPrefix}.switch_${varName}`;
+  const focusVar = `${modelPrefix}.focus_${varName}`;
+  const hoverVar = `${modelPrefix}.hover_${varName}`;
+  const selectVar = `${modelPrefix}.${varName}_select`;
+
+  const escapeHtml = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  };
+
+  const getParentVar = (parentId) => {
+    if (!parentId) return 'true';
+    return `${modelPrefix}.field_${parentId}`;
+  };
+
+  switch (field.type) {
+    case 'textarea':
+      return `
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text text-lg font-semibold">${escapeHtml(field.title)}</span>
+          </label>
+          <textarea class="textarea textarea-bordered w-full" rows="3" placeholder="Enter your ${escapeHtml(field.title.toLowerCase())} here..."
+            x-model="${modelVar}" @focus="$el.select()"></textarea>
+        </div>`;
+
+    case 'text':
+      return `
+        <div class="form-control mt-4">
+          <label class="label">
+            <span class="label-text">${escapeHtml(field.title)}</span>
+          </label>
+          <input type="text" class="input input-bordered w-full" placeholder="Enter ${escapeHtml(field.title.toLowerCase())}..."
+            x-model="${modelVar}" @focus="$el.select()" />
+        </div>`;
+
+    case 'composite':
+      const children = allFields.filter(f => f.father_field === field.id);
+      if (children.length === 0) return '';
+      const childrenHtml = children.map(child => renderFieldClient(child, allFields, groupIndex)).join('\n');
+      return `
+        <div class="form-control mt-4">
+          <label class="label mb-2">
+            <span class="label-text">${escapeHtml(field.title)}</span>
+          </label>
+          <div class="flex gap-2">
+            ${childrenHtml}
+          </div>
+        </div>`;
+
+    case 'number_2digit':
+      return `
+        <div class="relative w-1/3">
+          <input type="text" class="input input-bordered w-full text-center" maxlength="2"
+            x-model="${modelVar}"
+            @focus="${focusVar} = true; $el.select()"
+            @blur="${modelVar} = formatNumber(${modelVar}); ${focusVar} = false" />
+          ${field.helper ? `
+          <div class="absolute left-4 right-4 top-full mt-2 px-3 py-2 bg-base-300 text-base-content text-sm rounded-lg shadow-xl z-10 transition-opacity duration-200 min-w-[300px] max-w-[600px] w-fit mx-auto text-nowrap overflow-hidden"
+            x-show="${focusVar}" x-transition:enter="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="opacity-100" x-transition:leave-end="opacity-0">
+            <div class="leading-relaxed">${field.helper}</div>
+          </div>` : ''}
+        </div>`;
+
+    case 'number_1digit':
+      return `
+        <div class="relative w-1/2">
+          <input type="text" class="input input-bordered w-full text-center" maxlength="1"
+            x-model="${modelVar}"
+            @focus="${focusVar} = true; $el.select()"
+            @blur="${modelVar} = formatSingleDigit(${modelVar}); ${focusVar} = false" />
+          ${field.helper ? `
+          <div class="absolute left-4 right-4 top-full mt-2 px-3 py-2 bg-base-300 text-base-content text-sm rounded-lg shadow-xl z-10 transition-opacity duration-200 min-w-[300px] max-w-[600px] w-fit mx-auto text-nowrap overflow-hidden"
+            x-show="${focusVar}" x-transition:enter="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="opacity-100" x-transition:leave-end="opacity-0">
+            <div class="leading-relaxed">${field.helper}</div>
+          </div>` : ''}
+        </div>`;
+
+    case 'select':
+      const optionsHtml = field.options.map(opt => {
+        const displayText = opt.label ? `${escapeHtml(opt.value)}: ${escapeHtml(opt.label)}` : escapeHtml(opt.value);
+        return `<option value="${escapeHtml(opt.value)}">${displayText}</option>`;
+      }).join('\n');
+      return `
+        <div class="form-control mt-4">
+          ${field.is_optional ? `
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox" x-model="${modelVar}" />
+            <span class="label-text">${escapeHtml(field.title)}</span>
+          </label>
+          <div class="ml-8" x-show="${modelVar}" x-transition>
+            ${field.helper ? `<div class="text-sm text-base-content/70 mb-1">${field.helper}</div>` : ''}
+            <select class="select select-bordered w-full" x-model="${selectVar}">
+              ${optionsHtml}
+            </select>
+          </div>
+          ` : `
+          <label class="label mb-2">
+            <span class="label-text">${escapeHtml(field.title)}</span>
+          </label>
+          ${field.helper ? `<div class="text-sm text-base-content/70 mb-1">${field.helper}</div>` : ''}
+          <select class="select select-bordered w-full" x-model="${modelVar}">
+            ${optionsHtml}
+          </select>
+          `}
+        </div>`;
+
+    case 'checkbox':
+      return `
+        <div class="form-control mt-4 relative">
+          <label class="label cursor-pointer justify-start gap-2"
+            @mouseenter="${hoverVar} = true"
+            @mouseleave="${hoverVar} = false">
+            <input type="checkbox" class="checkbox" x-model="${modelVar}" />
+            <span class="label-text">${escapeHtml(field.title)}</span>
+          </label>
+          ${field.helper ? `
+          <div class="absolute left-4 right-4 top-full mt-1 px-3 py-2 bg-base-300 text-base-content text-sm rounded-lg shadow-xl z-10 transition-opacity duration-200 min-w-[300px] max-w-[600px] w-fit mx-auto text-nowrap overflow-hidden"
+            x-show="${hoverVar}" x-transition:enter="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="opacity-100" x-transition:leave-end="opacity-0">
+            <div class="leading-relaxed">${field.helper}</div>
+          </div>` : ''}
+        </div>`;
+
+    case 'checkbox_with_input':
+      return `
+        <div class="form-control mt-4 relative">
+          <label class="label cursor-pointer justify-start gap-2"
+            @mouseenter="${hoverVar} = true"
+            @mouseleave="${hoverVar} = false">
+            <input type="checkbox" class="checkbox" x-model="${modelVar}" />
+            <span class="label-text">${escapeHtml(field.title)}</span>
+          </label>
+          ${field.helper ? `
+          <div class="absolute left-4 right-4 top-full mt-1 px-3 py-2 bg-base-300 text-base-content text-sm rounded-lg shadow-xl z-10 transition-opacity duration-200 min-w-[300px] max-w-[600px] w-fit mx-auto text-nowrap overflow-hidden"
+            x-show="${hoverVar}" x-transition:enter="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="opacity-100" x-transition:leave-end="opacity-0">
+            <div class="leading-relaxed">${field.helper}</div>
+          </div>` : ''}
+        </div>`;
+
+    case 'number_6digit':
+      return `
+        <div class="form-control mt-2" x-show="${getParentVar(field.father_field)}" x-transition>
+          <label class="label">
+            <span class="label-text">${escapeHtml(field.title)} (6 dígitos)</span>
+          </label>
+          <input type="text" class="input input-bordered w-full" maxlength="6" placeholder="000000"
+            x-model="${modelVar}"
+            @focus="$el.select()"
+            @blur="${modelVar} = format6Digits(${modelVar})" />
+        </div>`;
+
+    case 'number_12digit':
+      return `
+        <div class="form-control mt-2" x-show="${getParentVar(field.father_field)}" x-transition>
+          <label class="label">
+            <span class="label-text">${escapeHtml(field.title)} (12 dígitos)</span>
+          </label>
+          <input type="text" class="input input-bordered w-full" maxlength="12" placeholder="000000000000"
+            x-model="${modelVar}"
+            @focus="$el.select()"
+            @blur="${modelVar} = format12Digits(${modelVar})" />
+        </div>`;
+
+    case 'text_26char':
+      return `
+        <div class="form-control mt-2" x-show="${getParentVar(field.father_field)}" x-transition>
+          <label class="label">
+            <span class="label-text">${escapeHtml(field.title)} (26 caracteres)</span>
+          </label>
+          <input type="text" class="input input-bordered w-full" maxlength="26" placeholder="Ingrese ${escapeHtml(field.title.toLowerCase())}..."
+            x-model="${modelVar}" @focus="$el.select()" />
+        </div>`;
+
+    case 'switch':
+      if (field.options.length < 2) return '';
+      const [offOpt, onOpt] = field.options.slice(0, 2);
+      const offLabel = escapeHtml(offOpt.label || offOpt.value);
+      const onLabel = escapeHtml(onOpt.label || onOpt.value);
+      return `
+        <div class="form-control mt-4">
+          ${field.is_optional ? `
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox" x-model="${modelVar}" />
+            <span class="label-text">${escapeHtml(field.title)}</span>
+          </label>
+          <div class="form-control ml-8" x-show="${modelVar}" x-transition>
+            <label class="label cursor-pointer justify-start gap-3">
+              <input type="checkbox" class="toggle" x-model="${switchVar}" />
+              <span class="label-text" x-text="${switchVar} ? '${onLabel}' : '${offLabel}'"></span>
+            </label>
+          </div>
+          ` : `
+          <label class="label cursor-pointer justify-start gap-3">
+            <input type="checkbox" class="toggle" x-model="${switchVar}" />
+            <span class="label-text">${escapeHtml(field.title)}: </span>
+            <span class="label-text font-semibold" x-text="${switchVar} ? '${onLabel}' : '${offLabel}'"></span>
+          </label>
+          `}
+        </div>`;
+
+    case 'static':
+      return '';
+
+    default:
+      return '';
+  }
+}
+
+// Alpine.js component - Multi-group version
 function documentacionApp() {
   return {
     fields: [],
     loading: true,
 
-    // Field values - initialized with defaults, updated from API in init()
-    field_1: '',
-    field_2: '',
-    field_3: '',
-    field_4: '00',
-    field_5: '00',
-    field_6: '00',
-    field_7: '',
-    field_8: '00',
-    field_9: '0',
-    field_10: false,
-    field_10_select: '',
-    field_11: false,
-    field_12: false,
-    field_13: false,
-    field_14: '4',
-    field_15: '02',
-    field_16: false,
-    field_17: '',
-    field_18: false,
-    field_19: '',
-    field_20: false,
-    field_21: false,
-    field_22: '',
-    field_23: false,
-    field_24: false,
-    field_25: false,
-    field_26: false,
-    field_27: false,
-    field_28: false,
-    field_29: false,
-    field_30: false,
-    field_31: false,
-    field_32: false,
-    field_33: false,
-    field_34: false,
-    field_35: false,
-    field_36: false,
-    field_37: false,
-    field_38: false,
-    field_39: false,
-    field_40: false,
-    field_41: false,
-    field_42: false,
-    field_43: false,
-    field_44: false,
-    field_45: false,
-    field_46: false,
-    field_47: '',
-    field_48: '',
-    field_49: '',
-    field_50: '',
-
-    // Switch toggle states
-    switch_field_42: false,
-    switch_field_46: false,
-
-    // Focus states for helpers
-    focus_field_4: false,
-    focus_field_5: false,
-    focus_field_6: false,
-    focus_field_8: false,
-    focus_field_9: false,
-
-    // Hover states for checkbox helpers (initialized dynamically)
-    hover_field_1: false,
-    hover_field_2: false,
-    hover_field_3: false,
-    hover_field_11: false,
-    hover_field_12: false,
-    hover_field_13: false,
-    hover_field_14: false,
-    hover_field_15: false,
-    hover_field_16: false,
-    hover_field_17: false,
-    hover_field_18: false,
-    hover_field_19: false,
-    hover_field_20: false,
-    hover_field_21: false,
-    hover_field_22: false,
-    hover_field_23: false,
-    hover_field_24: false,
-    hover_field_25: false,
-    hover_field_26: false,
-    hover_field_27: false,
-    hover_field_28: false,
-    hover_field_29: false,
-    hover_field_30: false,
-    hover_field_31: false,
-    hover_field_32: false,
-    hover_field_33: false,
-    hover_field_34: false,
-    hover_field_35: false,
-    hover_field_36: false,
-    hover_field_37: false,
-    hover_field_38: false,
-    hover_field_39: false,
-    hover_field_40: false,
-    hover_field_41: false,
-    hover_field_42: false,
-    hover_field_43: false,
-    hover_field_44: false,
-    hover_field_45: false,
-    hover_field_46: false,
-    hover_field_47: false,
-    hover_field_48: false,
-    hover_field_49: false,
-    hover_field_50: false,
+    // Multi-group state
+    inputGroups: [],
+    nextGroupId: 1,
+    deleteTimers: {},
+    deleteProgress: {},
 
     async init() {
       // Load fields from API
@@ -228,39 +346,173 @@ function documentacionApp() {
       this.fields = await response.json();
       this.loading = false;
 
-      // Update field values with defaults from database
+      // Create initial group
+      this.inputGroups = [this.createDefaultGroup(0)];
+      this.nextGroupId = 1;
+    },
+
+    // Create a new group with default values
+    createDefaultGroup(id) {
+      const group = { id, collapsed: false };
+
+      // Initialize all fields with defaults from database
       this.fields.forEach(field => {
         const varName = `field_${field.id}`;
-        const switchName = `switch_field_${field.id}`;
-        const focusName = `focus_field_${field.id}`;
-        const hoverName = `hover_field_${field.id}`;
-        const selectName = `field_${field.id}_select`;
 
-        // Update field value from database default
         if (field.type === 'checkbox' || field.type === 'checkbox_with_input') {
-          this[varName] = field.default_value === 'true';
+          group[varName] = field.default_value === 'true';
         } else if (field.type === 'switch') {
-          this[varName] = field.is_optional ? (field.default_value === 'true') : true;
-          this[switchName] = field.default_value === 'on' || field.default_value === 'true';
+          group[varName] = field.is_optional ? (field.default_value === 'true') : true;
+          group[`switch_${varName}`] = field.default_value === 'on' || field.default_value === 'true';
         } else if (field.type === 'select' && field.is_optional) {
-          this[varName] = false;
-          // Use first option as default if no default_value
+          group[varName] = false;
           const firstOption = field.options[0]?.value || '';
-          this[selectName] = field.default_value || firstOption;
+          group[`${varName}_select`] = field.default_value || firstOption;
         } else if (field.type === 'select') {
-          // Non-optional selects: use first option as default if no default_value
           const firstOption = field.options[0]?.value || '';
-          this[varName] = field.default_value || firstOption;
+          group[varName] = field.default_value || firstOption;
         } else if (field.default_value !== null && field.default_value !== '') {
-          this[varName] = field.default_value;
+          group[varName] = field.default_value;
+        } else {
+          group[varName] = '';
         }
 
-        // Initialize focus/hover state for fields with helpers
+        // Initialize focus/hover states for fields with helpers
         if (field.helper) {
-          this[focusName] = false;
-          this[hoverName] = false;
+          group[`focus_${varName}`] = false;
+          group[`hover_${varName}`] = false;
         }
       });
+
+      return group;
+    },
+
+    // Render fields HTML for a specific group (called from template)
+    renderGroupFields(groupIndex) {
+      if (this.loading || !this.fields.length) return '<div class="loading">Cargando...</div>';
+
+      const rootFields = this.fields.filter(f => f.father_field === null);
+      const htmlParts = [];
+
+      rootFields.forEach(field => {
+        // Add "Campo 63:" label before field 14
+        if (field.id === 14) {
+          htmlParts.push('<div class="mt-4 mb-2"><span class="label-text text-lg font-semibold">Campo 63:</span></div>');
+        }
+
+        htmlParts.push(renderFieldClient(field, this.fields, groupIndex));
+
+        // Find and render child fields (inputs controlled by checkboxes)
+        const childFields = this.fields.filter(f => f.father_field === field.id && field.type !== 'number_6digit' && field.type !== 'number_12digit' && field.type !== 'text_26char');
+        childFields.forEach(child => {
+          // Skip the input children of checkbox_with_input - they're handled separately
+          if (field.type === 'checkbox_with_input' && child.father_field === field.id) return;
+          htmlParts.push(renderFieldClient(child, this.fields, groupIndex));
+        });
+
+        // Render number and text children of checkbox_with_input
+        if (field.type === 'checkbox_with_input') {
+          const inputChildren = this.fields.filter(f => f.father_field === field.id);
+          inputChildren.forEach(child => {
+            htmlParts.push(renderFieldClient(child, this.fields, groupIndex));
+          });
+        }
+      });
+
+      return htmlParts.join('\n');
+    },
+
+    // Add a new group
+    addGroup() {
+      // Collapse all existing groups
+      this.inputGroups.forEach(g => g.collapsed = true);
+
+      // Create new group
+      const newGroup = this.createDefaultGroup(this.nextGroupId++);
+      this.inputGroups.push(newGroup);
+
+      // Scroll to the new group after render
+      this.$nextTick(() => {
+        const groups = document.querySelectorAll('.collapse');
+        if (groups.length > 0) {
+          groups[groups.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    },
+
+    // Start delete hold timer
+    startDeleteHold(groupId) {
+      if (this.inputGroups.length <= 1) return;
+
+      this.deleteProgress[groupId] = 0;
+      const startTime = Date.now();
+      const duration = 1000;
+
+      this.deleteTimers[groupId] = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        this.deleteProgress[groupId] = Math.min(100, (elapsed / duration) * 100);
+
+        if (elapsed >= duration) {
+          this.removeGroup(groupId);
+        }
+      }, 50);
+    },
+
+    // Cancel delete hold timer
+    cancelDeleteHold(groupId) {
+      if (this.deleteTimers[groupId]) {
+        clearInterval(this.deleteTimers[groupId]);
+        delete this.deleteTimers[groupId];
+      }
+      this.deleteProgress[groupId] = 0;
+    },
+
+    // Remove a group
+    removeGroup(groupId) {
+      if (this.inputGroups.length <= 1) return;
+
+      // Clean up timer
+      if (this.deleteTimers[groupId]) {
+        clearInterval(this.deleteTimers[groupId]);
+        delete this.deleteTimers[groupId];
+      }
+      delete this.deleteProgress[groupId];
+
+      // Remove group
+      this.inputGroups = this.inputGroups.filter(g => g.id !== groupId);
+    },
+
+    // Toggle group collapse
+    toggleCollapse(groupId) {
+      const group = this.inputGroups.find(g => g.id === groupId);
+      if (group) {
+        group.collapsed = !group.collapsed;
+      }
+    },
+
+    // Get label for group header
+    getGroupLabel(group, index) {
+      const matriz = group.field_1 || '';
+      const docInput = group.field_2 || '';
+      // Split by tab character and get first non-empty element
+      const parts = docInput.split('\t');
+      let trxType = '';
+      for (let i = 0; i < parts.length; i++) {
+        const trimmed = parts[i].trim();
+        // Skip purely numeric values at the start (matching original filter logic)
+        if (i === 0 && trimmed.match(/^[0-9]+$/)) {
+          continue;
+        }
+        if (trimmed.length > 0) {
+          trxType = trimmed;
+          break;
+        }
+      }
+
+      if (matriz && trxType) {
+        return `${matriz} (${trxType})`;
+      }
+      return `Transacción ${index + 1}`;
     },
 
     // Formatting methods
@@ -284,10 +536,15 @@ function documentacionApp() {
       return digits.padStart(12, '0');
     },
 
-    // Computed output
+    // Computed output - combines all groups
     get processedCode() {
       if (this.loading || !this.fields.length) return 'Cargando...';
-      return processDocumentacionDynamic(this.fields, this);
+
+      return this.inputGroups.map((group, index) => {
+        const label = this.getGroupLabel(group, index);
+        const result = processDocumentacionDynamic(this.fields, group);
+        return `=== ${label} ===\n${result}`;
+      }).join('\n');
     }
   };
 }
