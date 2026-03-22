@@ -12,3 +12,8 @@
 .pointer {
     cursor: pointer;
 }
+
+/* Allow line breaks in tooltips */
+.tooltip::before {
+    white-space: pre-line;
+}

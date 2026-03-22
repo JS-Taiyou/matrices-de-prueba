@@ -6,6 +6,9 @@ function extractorApp() {
     return {
         matrices: [],
         newMatrixName: '',
+        deleteTimers: {},
+        deleteProgress: {},
+        longPressTriggered: {},
 
         generateId() {
             return Math.random().toString(36).substring(2, 6);
@@ -28,6 +31,58 @@ function extractorApp() {
             this.matrices.push(matrix);
             this.newMatrixName = '';
             console.log('Matrix added:', matrix);
+        },
+
+        removeMatrix(matrixId) {
+            this.matrices = this.matrices.filter(m => m.id !== matrixId);
+            delete this.deleteProgress[matrixId];
+            delete this.deleteTimers[matrixId];
+            delete this.longPressTriggered[matrixId];
+        },
+
+        startMatrixLongPress(matrixId) {
+            this.longPressTriggered[matrixId] = false;
+            const startTime = Date.now();
+            const cancelThreshold = 500; // 500ms to cancel click
+            const deleteThreshold = 1000; // 1000ms total to delete
+
+            this.deleteTimers[matrixId] = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+
+                // After 500ms, mark as long press (cancel click)
+                if (elapsed >= cancelThreshold && !this.longPressTriggered[matrixId]) {
+                    this.longPressTriggered[matrixId] = true;
+                }
+
+                // After 500ms, start showing progress (500-1000ms range)
+                if (elapsed >= cancelThreshold) {
+                    const progressElapsed = elapsed - cancelThreshold;
+                    const progressDuration = deleteThreshold - cancelThreshold; // 500ms
+                    this.deleteProgress[matrixId] = Math.min(100, (progressElapsed / progressDuration) * 100);
+                }
+
+                // At 1000ms, delete the matrix
+                if (elapsed >= deleteThreshold) {
+                    this.removeMatrix(matrixId);
+                }
+            }, 50);
+        },
+
+        cancelMatrixLongPress(matrixId) {
+            if (this.deleteTimers[matrixId]) {
+                clearInterval(this.deleteTimers[matrixId]);
+                delete this.deleteTimers[matrixId];
+            }
+            this.deleteProgress[matrixId] = 0;
+        },
+
+        handleMatrixClick(matrixId) {
+            // If long press was triggered, don't edit
+            if (this.longPressTriggered[matrixId]) {
+                this.longPressTriggered[matrixId] = false;
+                return;
+            }
+            this.editMatrix(matrixId);
         },
 
         addBlock(matrixId) {

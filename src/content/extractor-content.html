@@ -10,19 +10,26 @@
                     <label class="fieldset-label">
                         Matrices
                     </label>
-                    <div class="flex flex-col gap-2">
-                        <div class="flex gap-2">
-                            <input type="text" class="input flex-1" pattern="[A-ZÑ&]{3,4}\d{6}[A-V1-9][0-9A-Z]"
-                                placeholder="Nombre de matriz" x-model="newMatrixName" @keydown.enter.prevent="addMatrix()" />
-                            <button type="button" class="btn btn-circle btn-sm" @click="addMatrix()">+</button>
-                        </div>
-                    </div>
-
 
                     <fieldset id="matrix-container" class="fieldset bg-base-200">
                         <template x-for="matrix in matrices" :key="matrix.id">
                             <div>
-                                <legend class="fieldset-legend block cursor-pointer hover:opacity-80" @click="editMatrix(matrix.id)" x-html="matrix.name + '<div class=&quot;badge badge-success ml-2&quot;>Matriz</div>'"></legend>
+                                <div class="flex items-center gap-2">
+                                    <div class="tooltip tooltip-right w-fit relative pt-1" data-tip="Click para editar nombre&#10;Sostener para eliminar">
+                                        <progress class="progress progress-error w-full h-2 absolute top-0 left-0"
+                                                  :value="deleteProgress[matrix.id] || 0" max="100"
+                                                  x-show="(deleteProgress[matrix.id] || 0) > 0"
+                                                  x-transition></progress>
+                                        <legend class="fieldset-legend block cursor-pointer hover:opacity-80"
+                                                @click="handleMatrixClick(matrix.id)"
+                                                @mousedown="startMatrixLongPress(matrix.id)"
+                                                @mouseup="cancelMatrixLongPress(matrix.id)"
+                                                @mouseleave="cancelMatrixLongPress(matrix.id)"
+                                                @touchstart="startMatrixLongPress(matrix.id)"
+                                                @touchend="cancelMatrixLongPress(matrix.id)"
+                                                x-html="matrix.name + '<div class=&quot;badge badge-success ml-2&quot;>Matriz</div>'"></legend>
+                                    </div>
+                                </div>
                                 <input type="hidden" :name="'matrix-name#' + matrix.id" :value="matrix.encodedName" />
                                 <div class="flex flex-col gap-2 pl-[16px]" :data-matrix-id="matrix.id">
                                     <template x-for="block in matrix.blocks" :key="block.id">
@@ -72,6 +79,13 @@
                                 <button type="button" class="btn btn-primary mb-4 mt-2" @click="addBlock(matrix.id)">Nuevo bloque</button>
                             </div>
                         </template>
+
+                        <!-- Input para agregar nueva matriz al final -->
+                        <div class="flex gap-2 mt-4">
+                            <input type="text" class="input flex-1" pattern="[A-ZÑ&]{3,4}\d{6}[A-V1-9][0-9A-Z]"
+                                placeholder="Nombre de matriz" x-model="newMatrixName" @keydown.enter.prevent="addMatrix()" />
+                            <button type="button" class="btn btn-circle btn-sm" @click="addMatrix()">+</button>
+                        </div>
                     </fieldset>
                     <div class=" bottom-0 mt-auto pt-2">
                         <button class="btn btn-neutral w-full" type="submit" @click="checkPendingCasesAndSubmit($event)">Procesar</button>
