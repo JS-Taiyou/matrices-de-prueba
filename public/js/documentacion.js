@@ -405,6 +405,9 @@ function documentacionApp() {
         // Find and render child fields (inputs controlled by checkboxes)
         const childFields = this.fields.filter(f => f.father_field === field.id && field.type !== 'number_6digit' && field.type !== 'number_12digit' && field.type !== 'text_26char');
         childFields.forEach(child => {
+          // Skip children of composite fields - they're already rendered inside the composite container
+          const parentField = this.fields.find(f => f.id === child.father_field);
+          if (parentField && parentField.type === 'composite') return;
           // Skip the input children of checkbox_with_input - they're handled separately
           if (field.type === 'checkbox_with_input' && child.father_field === field.id) return;
           htmlParts.push(renderFieldClient(child, this.fields, groupIndex));
