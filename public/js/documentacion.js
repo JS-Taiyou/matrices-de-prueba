@@ -443,6 +443,35 @@ function documentacionApp() {
       });
     },
 
+    // Clone the last group
+    cloneGroup() {
+      // Collapse all existing groups
+      this.inputGroups.forEach(g => g.collapsed = true);
+
+      // Create new group
+      const newGroup = this.createDefaultGroup(this.nextGroupId++);
+
+      // Copy values from the last group
+      const lastGroup = this.inputGroups[this.inputGroups.length - 1];
+      if (lastGroup) {
+        Object.keys(lastGroup).forEach(key => {
+          if (key !== 'id' && key !== 'collapsed') {
+            newGroup[key] = lastGroup[key];
+          }
+        });
+      }
+
+      this.inputGroups.push(newGroup);
+
+      // Scroll to the new group after render
+      this.$nextTick(() => {
+        const groups = document.querySelectorAll('.collapse');
+        if (groups.length > 0) {
+          groups[groups.length - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    },
+
     // Start delete hold timer
     startDeleteHold(groupId) {
       if (this.inputGroups.length <= 1) return;

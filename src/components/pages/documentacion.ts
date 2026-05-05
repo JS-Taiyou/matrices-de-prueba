@@ -48,12 +48,20 @@ export const documentacion = new Elysia()
         </template>
 
         <!-- Botón agregar -->
-        <button @click="addGroup()" class="btn btn-primary w-full">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Agregar Transacción
-        </button>
+        <div class="btn-group flex flex-row w-full gap-2 pr-2">
+            <button @click="addGroup()" class="btn btn-primary w-1/2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Agregar Transacción
+            </button>
+            <button @click="cloneGroup()" class="btn btn-accent w-1/2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Clonar Transacción
+            </button>
+        </div>
     </div>
 
     <div class="w-1/2 p-4 sticky top-4 self-start h-screen">
