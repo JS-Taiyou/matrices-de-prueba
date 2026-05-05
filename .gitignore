@@ -42,3 +42,17 @@ package-lock.json
 **/*.bun
 CRUSH.md
 src/db/fields.db
+
+# kilo/agent temp files
+.kilo/
+.playwright-mcp/
+
+# agent docs and temp screenshots
+CLAUDE.md
+btn-check.png
+
+# local working files
+documento para documentacion automatizada.txt
+
+# generated assets
+public/css/style.css
